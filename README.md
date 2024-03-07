@@ -1,7 +1,5 @@
 # Sistema de Control de Inventarios
 
-Para el archivo README de tu proyecto de control de inventarios con funcionalidad de roles en MySQL, puedes seguir una estructura similar a la sugerida anteriormente, pero con la información adecuada para MySQL. Aquí tienes un ejemplo:
-
 Sistema de Control de Inventarios
 Este proyecto es un sistema de control de inventarios desarrollado en FastAPI con base de datos MySQL, que permite gestionar el inventario de una empresa, así como la administración de usuarios con diferentes roles.
 
