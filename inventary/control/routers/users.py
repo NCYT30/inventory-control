@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Path
+from fastapi import Depends, status
 
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
@@ -11,25 +12,37 @@ from ..schemas import UsersResponseModel
 from ..schemas import UsersRequestModel
 from ..schemas import UsersRequesPutModel
 
-from ..database import Users
+from .login import get_current_user
+
+from ..database import Users, RolPer
 
 
 router = APIRouter(prefix = '/users')
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+@router.get('/', response_model=List[UsersResponseModel])
+async def get_users(current_user: Users = Depends(get_current_user)):
 
-@router.get('/', response_model = list[UsersResponseModel])
-async def get_users(page: int = 1, limit = 10):
+    user = await current_user  
+    permission = RolPer.get_or_none(fk_user=user.id, fk_per=2)
+    if not permission:
+        raise HTTPException(status_code=403, detail="No tienes permiso para acceder al usuario")
+
+
     users = Users.select().where(Users.active == 0)
-
-    return [ user for user in users]
-
+    return [user for user in users]
 
 
 
 @router.get('/{users_id}', response_model = UsersResponseModel)
-async def get_user_id(users_id: int = Path(..., title = 'User  ID', ge = 1)):
+async def get_user_id(users_id: int = Path(..., title = 'User  ID', ge = 1),current_user: Users = Depends(get_current_user)):
+    
+    user = await current_user  
+    permission = RolPer.get_or_none(fk_user=user.id, fk_per=2)
+    if not permission:
+        raise HTTPException(status_code=403, detail="No tienes permiso para acceder al usuario")
+
     users = Users.get_or_none((Users.id == users_id) & (Users.active == 0))
 
     if users is None:
@@ -38,7 +51,12 @@ async def get_user_id(users_id: int = Path(..., title = 'User  ID', ge = 1)):
     return users
 
 @router.post('/', response_model = UsersResponseModel)
-async def create_users(users:  UsersRequestModel):
+async def create_users(users:  UsersRequestModel, current_user: Users = Depends(get_current_user)):
+    
+    user = await current_user  
+    permission = RolPer.get_or_none(fk_user=user.id, fk_per=2)
+    if not permission:
+        raise HTTPException(status_code=403, detail="No tienes permiso para acceder al usuario")
 
     hashed_password = bcrypt.hash(users.password)
 
@@ -55,7 +73,14 @@ async def create_users(users:  UsersRequestModel):
  
 
 @router.put('/{id}', response_model=UsersResponseModel)
-async def update_user(id: int, users_request: UsersRequesPutModel):
+async def update_user(id: int, users_request: UsersRequesPutModel, current_user: Users = Depends(get_current_user)):
+    
+    user = await current_user  
+    permission = RolPer.get_or_none(fk_user=user.id, fk_per=2)
+    if not permission:
+        raise HTTPException(status_code=403, detail="No tienes permiso para acceder al usuario")
+
+
     users = Users.select().where(Users.id == id).first()
 
     if users is None:
@@ -77,7 +102,13 @@ async def update_user(id: int, users_request: UsersRequesPutModel):
 
 
 @router.put('/pass/{user_id}', response_model=UsersResponseModel)
-async def update_password_users(user_id: int, user_request: UsersRequesPutModel):
+async def update_password_users(user_id: int, user_request: UsersRequesPutModel, current_user: Users = Depends(get_current_user)):
+
+    user = await current_user  
+    permission = RolPer.get_or_none(fk_user=user.id, fk_per=2)
+    if not permission:
+        raise HTTPException(status_code=403, detail="No tienes permiso para acceder al usuario")
+
 
     user = Users.select().where(Users.id == user_id).first()
 
@@ -100,7 +131,13 @@ async def update_password_users(user_id: int, user_request: UsersRequesPutModel)
 
 
 @router.delete('/{id}', response_model = UsersResponseModel)
-async def delete_user(id: int, users_request: UsersRequesPutModel):
+async def delete_user(id: int, users_request: UsersRequesPutModel, current_user: Users = Depends(get_current_user)):
+
+    user = await current_user  
+    permission = RolPer.get_or_none(fk_user=user.id, fk_per=2)
+    if not permission:
+        raise HTTPException(status_code=403, detail="No tienes permiso para acceder al usuario")
+
 
     users = Users.select().where(Users.id == id).first()
 
